@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - simple_fraction</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_fraction</h1>
+        <p class="tagline">API Reference</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html" class="active">API Reference</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+            <li><a href="cookbook.html">Cookbook</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_fraction">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="toc">
+            <h2>Contents</h2>
+            <ul>
+                <li><a href="#creation">Creation Procedures</a></li>
+                <li><a href="#access">Access (Attributes)</a></li>
+                <li><a href="#status">Status Queries</a></li>
+                <li><a href="#comparison">Comparison</a></li>
+                <li><a href="#conversion">Conversion</a></li>
+                <li><a href="#arithmetic">Arithmetic Operations</a></li>
+                <li><a href="#scaling">Scaling</a></li>
+                <li><a href="#factory">Factory Helpers</a></li>
+                <li><a href="#common">Common Fractions</a></li>
+            </ul>
+        </section>
+
+        <section id="creation">
+            <h2>Creation Procedures</h2>
+
+            <div class="api-entry">
+                <h3>default_create</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.default_create</code></p>
+                <p>Creates zero (0/1).</p>
+                <p><strong>Postconditions:</strong> <code>is_zero</code>, <code>denominator = 1</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>make</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.make (a_numerator, a_denominator: <span class="type">INTEGER_64</span>)</code></p>
+                <p>Creates fraction from numerator and denominator. Automatically reduces to lowest terms.</p>
+                <p><strong>Precondition:</strong> <code>a_denominator /= 0</code></p>
+                <p><strong>Postconditions:</strong> <code>is_reduced</code>, <code>denominator > 0</code></p>
+                <p><strong>Example:</strong></p>
+<pre><code><span class="keyword">create</span> f.make (2, 4)   <span class="comment">-- Automatically reduces to 1/2</span></code></pre>
+            </div>
+
+            <div class="api-entry">
+                <h3>make_integer</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.make_integer (a_value: <span class="type">INTEGER_64</span>)</code></p>
+                <p>Creates fraction from integer (value/1).</p>
+                <p><strong>Postconditions:</strong> <code>numerator = a_value</code>, <code>denominator = 1</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>make_mixed</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.make_mixed (a_whole, a_numerator, a_denominator: <span class="type">INTEGER_64</span>)</code></p>
+                <p>Creates from mixed number: whole + numerator/denominator.</p>
+                <p><strong>Preconditions:</strong> <code>a_denominator /= 0</code>, <code>a_numerator >= 0</code>, <code>a_denominator > 0</code></p>
+                <p><strong>Example:</strong></p>
+<pre><code><span class="keyword">create</span> f.make_mixed (2, 3, 4)  <span class="comment">-- 2 3/4 = 11/4</span></code></pre>
+            </div>
+
+            <div class="api-entry">
+                <h3>make_from_string</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.make_from_string (a_str: <span class="type">READABLE_STRING_GENERAL</span>)</code></p>
+                <p>Creates from string. Accepts: "3/4", "-1/2", "5", "2 3/4", "0.5"</p>
+                <p><strong>Precondition:</strong> <code>a_str /= Void and then not a_str.is_empty</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>make_zero</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.make_zero</code></p>
+                <p>Creates zero (0/1).</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>make_one</h3>
+                <p class="signature"><code><span class="keyword">create</span> f.make_one</code></p>
+                <p>Creates one (1/1).</p>
+            </div>
+        </section>
+
+        <section id="access">
+            <h2>Access (Attributes)</h2>
+
+            <div class="api-entry">
+                <h3>numerator</h3>
+                <p class="signature"><code>numerator: <span class="type">INTEGER_64</span></code></p>
+                <p>The numerator (top number). May be negative.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>denominator</h3>
+                <p class="signature"><code>denominator: <span class="type">INTEGER_64</span></code></p>
+                <p>The denominator (bottom number). Always positive.</p>
+                <p><strong>Invariant:</strong> <code>denominator > 0</code></p>
+            </div>
+        </section>
+
+        <section id="status">
+            <h2>Status Queries</h2>
+
+            <div class="api-entry">
+                <h3>is_zero</h3>
+                <p class="signature"><code>is_zero: <span class="type">BOOLEAN</span></code></p>
+                <p>True if numerator = 0.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_negative</h3>
+                <p class="signature"><code>is_negative: <span class="type">BOOLEAN</span></code></p>
+                <p>True if numerator &lt; 0.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_positive</h3>
+                <p class="signature"><code>is_positive: <span class="type">BOOLEAN</span></code></p>
+                <p>True if numerator &gt; 0 (not zero, not negative).</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_integer</h3>
+                <p class="signature"><code>is_integer: <span class="type">BOOLEAN</span></code></p>
+                <p>True if denominator = 1 (whole number).</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_proper</h3>
+                <p class="signature"><code>is_proper: <span class="type">BOOLEAN</span></code></p>
+                <p>True if |numerator| &lt; denominator. Example: 3/4 is proper.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_improper</h3>
+                <p class="signature"><code>is_improper: <span class="type">BOOLEAN</span></code></p>
+                <p>True if |numerator| &gt;= denominator. Example: 5/4 is improper.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_reduced</h3>
+                <p class="signature"><code>is_reduced: <span class="type">BOOLEAN</span></code></p>
+                <p>True if fraction is in lowest terms. Always true due to automatic reduction.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_unit_fraction</h3>
+                <p class="signature"><code>is_unit_fraction: <span class="type">BOOLEAN</span></code></p>
+                <p>True if numerator = 1. Examples: 1/2, 1/3, 1/4.</p>
+            </div>
+        </section>
+
+        <section id="comparison">
+            <h2>Comparison</h2>
+
+            <div class="api-entry">
+                <h3>is_less alias "&lt;"</h3>
+                <p class="signature"><code>is_less <span class="keyword">alias</span> <span class="string">"&lt;"</span> (other: <span class="keyword">like</span> Current): <span class="type">BOOLEAN</span></code></p>
+                <p>True if current fraction is less than other.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>is_equal</h3>
+                <p class="signature"><code>is_equal (other: <span class="keyword">like</span> Current): <span class="type">BOOLEAN</span></code></p>
+                <p>True if fractions are mathematically equal.</p>
+            </div>
+
+            <p><strong>Inherited from COMPARABLE:</strong> <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>min</code>, <code>max</code></p>
+        </section>
+
+        <section id="conversion">
+            <h2>Conversion</h2>
+
+            <div class="api-entry">
+                <h3>to_double</h3>
+                <p class="signature"><code>to_double: <span class="type">DOUBLE</span></code></p>
+                <p>Converts to double (may lose precision for fractions like 1/3).</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>to_integer</h3>
+                <p class="signature"><code>to_integer: <span class="type">INTEGER_64</span></code></p>
+                <p>Converts to integer (truncates toward zero).</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>whole_part</h3>
+                <p class="signature"><code>whole_part: <span class="type">INTEGER_64</span></code></p>
+                <p>The whole number portion. Example: 11/4 returns 2.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>fractional_part</h3>
+                <p class="signature"><code>fractional_part: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>The fractional remainder. Example: 11/4 returns 3/4.</p>
+                <p><strong>Postconditions:</strong> <code>Result.is_proper or Result.is_zero</code>, <code>not Result.is_negative</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>out</h3>
+                <p class="signature"><code>out: <span class="type">STRING</span></code></p>
+                <p>String as "numerator/denominator" or just "integer" if denominator = 1.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>to_string</h3>
+                <p class="signature"><code>to_string: <span class="type">STRING</span></code></p>
+                <p>Same as <code>out</code>.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>to_mixed_string</h3>
+                <p class="signature"><code>to_mixed_string: <span class="type">STRING</span></code></p>
+                <p>String as mixed number "whole num/den". Examples: 11/4 returns "2 3/4", 3/4 returns "3/4".</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>to_decimal_string</h3>
+                <p class="signature"><code>to_decimal_string (a_places: <span class="type">INTEGER</span>): <span class="type">STRING</span></code></p>
+                <p>Decimal representation to specified places.</p>
+                <p><strong>Precondition:</strong> <code>a_places >= 0</code></p>
+            </div>
+        </section>
+
+        <section id="arithmetic">
+            <h2>Arithmetic Operations</h2>
+            <p class="note">All operations are <strong>immutable</strong> - they return new SIMPLE_FRACTION objects.</p>
+
+            <div class="api-entry">
+                <h3>add alias "+"</h3>
+                <p class="signature"><code>add <span class="keyword">alias</span> <span class="string">"+"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Sum of current and other.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>subtract alias "-"</h3>
+                <p class="signature"><code>subtract <span class="keyword">alias</span> <span class="string">"-"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Difference of current and other.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>multiply alias "*"</h3>
+                <p class="signature"><code>multiply <span class="keyword">alias</span> <span class="string">"*"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Product of current and other.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>divide alias "/"</h3>
+                <p class="signature"><code>divide <span class="keyword">alias</span> <span class="string">"/"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Quotient of current divided by other.</p>
+                <p><strong>Precondition:</strong> <code>not other.is_zero</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>negate</h3>
+                <p class="signature"><code>negate: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Negated value (flips sign).</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>absolute</h3>
+                <p class="signature"><code>absolute: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Absolute value.</p>
+                <p><strong>Postcondition:</strong> <code>not Result.is_negative</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>reciprocal</h3>
+                <p class="signature"><code>reciprocal: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Reciprocal (1/this = denominator/numerator).</p>
+                <p><strong>Precondition:</strong> <code>not is_zero</code></p>
+                <p><strong>Postcondition:</strong> <code>(Current * Result).is_equal (one)</code></p>
+            </div>
+
+            <div class="api-entry">
+                <h3>power</h3>
+                <p class="signature"><code>power (n: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Current raised to integer power n. Negative powers use reciprocal.</p>
+                <p><strong>Example:</strong> (2/3).power(2) = 4/9, (2/3).power(-1) = 3/2</p>
+            </div>
+        </section>
+
+        <section id="scaling">
+            <h2>Scaling</h2>
+
+            <div class="api-entry">
+                <h3>scale</h3>
+                <p class="signature"><code>scale (a_factor: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Multiply by integer factor.</p>
+                <p><strong>Example:</strong> (1/4).scale(3) = 3/4</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>scale_down</h3>
+                <p class="signature"><code>scale_down (a_factor: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Divide by integer factor.</p>
+                <p><strong>Precondition:</strong> <code>a_factor /= 0</code></p>
+                <p><strong>Example:</strong> (3/4).scale_down(2) = 3/8</p>
+            </div>
+        </section>
+
+        <section id="factory">
+            <h2>Factory Helpers</h2>
+
+            <div class="api-entry">
+                <h3>zero</h3>
+                <p class="signature"><code>zero: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns new zero fraction.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>one</h3>
+                <p class="signature"><code>one: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns new fraction equal to 1.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>half</h3>
+                <p class="signature"><code>half: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns 1/2.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>third</h3>
+                <p class="signature"><code>third: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns 1/3.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>quarter</h3>
+                <p class="signature"><code>quarter: <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns 1/4.</p>
+            </div>
+        </section>
+
+        <section id="common">
+            <h2>Common Fractions</h2>
+
+            <div class="api-entry">
+                <h3>halves</h3>
+                <p class="signature"><code>halves (n: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns n/2.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>thirds</h3>
+                <p class="signature"><code>thirds (n: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns n/3.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>quarters</h3>
+                <p class="signature"><code>quarters (n: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns n/4.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>eighths</h3>
+                <p class="signature"><code>eighths (n: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns n/8.</p>
+            </div>
+
+            <div class="api-entry">
+                <h3>sixteenths</h3>
+                <p class="signature"><code>sixteenths (n: <span class="type">INTEGER_64</span>): <span class="type">SIMPLE_FRACTION</span></code></p>
+                <p>Returns n/16.</p>
+            </div>
+        </section>
+
+        <section id="invariants">
+            <h2>Class Invariants</h2>
+<pre><code><span class="keyword">invariant</span>
+    denominator_positive: denominator > 0
+    reduced_form: is_reduced</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="https://github.com/simple-eiffel">simple_*</a> ecosystem.</p>
+        <p>&copy; 2025 Larry Rix. MIT License.</p>
+    </footer>
+</body>
+</html>

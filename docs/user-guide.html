@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - simple_fraction</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_fraction</h1>
+        <p class="tagline">User Guide</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="user-guide.html" class="active">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+            <li><a href="cookbook.html">Cookbook</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_fraction">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="introduction">
+            <h2>Introduction</h2>
+            <p>
+                This guide covers everything you need to know to use simple_fraction effectively.
+                We'll start with the basics and progress to advanced topics.
+            </p>
+
+            <h3>Why Fractions?</h3>
+            <p>
+                Fractions provide <strong>exact</strong> representation of rational numbers. Unlike
+                decimals (which approximate 1/3 as 0.333...), fractions store 1/3 as exactly 1/3.
+            </p>
+
+            <div class="highlight-box">
+                <h4>The Classic Example</h4>
+<pre><code><span class="comment">-- With decimals:</span>
+1.0/3.0 + 1.0/3.0 + 1.0/3.0  <span class="comment">-- May not equal exactly 1.0</span>
+
+<span class="comment">-- With fractions:</span>
+<span class="keyword">create</span> third.make (1, 3)
+third + third + third  <span class="comment">-- Equals exactly 1 (3/3 reduced)</span></code></pre>
+            </div>
+        </section>
+
+        <section id="getting-started">
+            <h2>Getting Started</h2>
+
+            <h3>Installation</h3>
+            <ol>
+                <li><strong>Set the environment variable:</strong>
+<pre><code><span class="comment"># Unix/Linux/macOS</span>
+export SIMPLE_FRACTION=/path/to/simple_fraction
+
+<span class="comment"># Windows</span>
+set SIMPLE_FRACTION=C:\path\to\simple_fraction</code></pre>
+                </li>
+                <li><strong>Add to your ECF:</strong>
+<pre><code>&lt;library name="simple_fraction" location="$SIMPLE_FRACTION/simple_fraction.ecf"/&gt;</code></pre>
+                </li>
+            </ol>
+
+            <h3>Your First Fraction</h3>
+<pre><code><span class="keyword">local</span>
+    half: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> half.make (1, 2)
+    print (half.out)           <span class="comment">-- "1/2"</span>
+    print (half.to_double.out) <span class="comment">-- "0.5"</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="creation">
+            <h2>Creating Fractions</h2>
+
+            <h3>From Numerator and Denominator</h3>
+<pre><code><span class="keyword">create</span> half.make (1, 2)         <span class="comment">-- 1/2</span>
+<span class="keyword">create</span> three_quarters.make (3, 4) <span class="comment">-- 3/4</span>
+<span class="keyword">create</span> negative.make (-1, 2)    <span class="comment">-- -1/2</span></code></pre>
+
+            <h3>Automatic Reduction</h3>
+            <p>Fractions are automatically reduced to lowest terms:</p>
+<pre><code><span class="keyword">create</span> f.make (2, 4)   <span class="comment">-- Becomes 1/2</span>
+<span class="keyword">create</span> f.make (6, 9)   <span class="comment">-- Becomes 2/3</span>
+<span class="keyword">create</span> f.make (100, 25) <span class="comment">-- Becomes 4</span>
+<span class="keyword">create</span> f.make (3, -4)  <span class="comment">-- Becomes -3/4 (sign in numerator)</span></code></pre>
+
+            <h3>From Integer</h3>
+<pre><code><span class="keyword">create</span> five.make_integer (5)   <span class="comment">-- 5 (= 5/1)</span>
+<span class="keyword">create</span> neg.make_integer (-3)   <span class="comment">-- -3</span></code></pre>
+
+            <h3>From Mixed Number</h3>
+            <p>Mixed numbers like "2 3/4" are whole + fraction:</p>
+<pre><code><span class="keyword">create</span> f.make_mixed (2, 3, 4)   <span class="comment">-- 2 3/4 = 11/4</span>
+<span class="keyword">create</span> f.make_mixed (1, 1, 2)   <span class="comment">-- 1 1/2 = 3/2</span>
+<span class="keyword">create</span> f.make_mixed (-2, 1, 4)  <span class="comment">-- -2 1/4 = -9/4</span></code></pre>
+
+            <h3>From String</h3>
+            <p>The string parser accepts multiple formats:</p>
+<pre><code><span class="keyword">create</span> f.make_from_string (<span class="string">"3/4"</span>)     <span class="comment">-- Simple fraction</span>
+<span class="keyword">create</span> f.make_from_string (<span class="string">"-1/2"</span>)    <span class="comment">-- Negative fraction</span>
+<span class="keyword">create</span> f.make_from_string (<span class="string">"2 3/4"</span>)   <span class="comment">-- Mixed number</span>
+<span class="keyword">create</span> f.make_from_string (<span class="string">"5"</span>)       <span class="comment">-- Integer</span>
+<span class="keyword">create</span> f.make_from_string (<span class="string">"0.5"</span>)     <span class="comment">-- Decimal -> 1/2</span>
+<span class="keyword">create</span> f.make_from_string (<span class="string">"0.25"</span>)    <span class="comment">-- Decimal -> 1/4</span></code></pre>
+
+            <h3>Special Values</h3>
+<pre><code><span class="keyword">create</span> z.make_zero    <span class="comment">-- 0</span>
+<span class="keyword">create</span> o.make_one     <span class="comment">-- 1</span></code></pre>
+        </section>
+
+        <section id="arithmetic">
+            <h2>Arithmetic Operations</h2>
+            <p>All operations are <strong>immutable</strong> - they return new fractions without modifying originals.</p>
+
+            <h3>Basic Operations</h3>
+<pre><code><span class="keyword">local</span>
+    a, b, r: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> a.make (1, 2)
+    <span class="keyword">create</span> b.make (1, 4)
+
+    r := a + b    <span class="comment">-- Addition: 1/2 + 1/4 = 3/4</span>
+    r := a - b    <span class="comment">-- Subtraction: 1/2 - 1/4 = 1/4</span>
+    r := a * b    <span class="comment">-- Multiplication: 1/2 * 1/4 = 1/8</span>
+    r := a / b    <span class="comment">-- Division: 1/2 / 1/4 = 2</span>
+<span class="keyword">end</span></code></pre>
+
+            <h3>Other Operations</h3>
+<pre><code>r := f.negate      <span class="comment">-- Flip sign: 3/4 -> -3/4</span>
+r := f.absolute    <span class="comment">-- Absolute value: -3/4 -> 3/4</span>
+r := f.reciprocal  <span class="comment">-- Flip fraction: 3/4 -> 4/3</span>
+r := f.power (2)   <span class="comment">-- Square: (2/3)^2 = 4/9</span>
+r := f.power (-1)  <span class="comment">-- Negative power = reciprocal</span></code></pre>
+
+            <h3>Scaling</h3>
+<pre><code><span class="comment">-- Multiply by integer</span>
+r := f.scale (3)        <span class="comment">-- 1/4 * 3 = 3/4</span>
+
+<span class="comment">-- Divide by integer</span>
+r := f.scale_down (2)   <span class="comment">-- 3/4 / 2 = 3/8</span></code></pre>
+        </section>
+
+        <section id="comparison">
+            <h2>Comparison</h2>
+            <p>SIMPLE_FRACTION implements COMPARABLE:</p>
+<pre><code><span class="keyword">if</span> a < b <span class="keyword">then</span> ...
+<span class="keyword">if</span> a <= b <span class="keyword">then</span> ...
+<span class="keyword">if</span> a > b <span class="keyword">then</span> ...
+<span class="keyword">if</span> a >= b <span class="keyword">then</span> ...
+<span class="keyword">if</span> a.is_equal (b) <span class="keyword">then</span> ...</code></pre>
+
+            <h3>Status Queries</h3>
+<pre><code>f.is_zero           <span class="comment">-- Is 0?</span>
+f.is_negative       <span class="comment">-- Is less than 0?</span>
+f.is_positive       <span class="comment">-- Is greater than 0?</span>
+f.is_integer        <span class="comment">-- Is whole number (denominator = 1)?</span>
+f.is_proper         <span class="comment">-- Is |numerator| < denominator? (like 3/4)</span>
+f.is_improper       <span class="comment">-- Is |numerator| >= denominator? (like 5/4)</span>
+f.is_unit_fraction  <span class="comment">-- Is numerator = 1? (like 1/4)</span></code></pre>
+        </section>
+
+        <section id="mixed-numbers">
+            <h2>Mixed Numbers</h2>
+            <p>Mixed numbers combine a whole part with a fractional part, like 2 3/4.</p>
+
+            <h3>Creating Mixed Numbers</h3>
+<pre><code><span class="comment">-- From parts</span>
+<span class="keyword">create</span> f.make_mixed (2, 3, 4)   <span class="comment">-- 2 3/4 = 11/4</span>
+
+<span class="comment">-- From string</span>
+<span class="keyword">create</span> f.make_from_string (<span class="string">"2 3/4"</span>)
+
+<span class="comment">-- Note: internally stored as improper fraction (11/4)</span></code></pre>
+
+            <h3>Displaying as Mixed</h3>
+<pre><code><span class="keyword">create</span> f.make (11, 4)
+print (f.out)              <span class="comment">-- "11/4"</span>
+print (f.to_mixed_string)  <span class="comment">-- "2 3/4"</span></code></pre>
+
+            <h3>Extracting Parts</h3>
+<pre><code><span class="keyword">create</span> f.make (11, 4)
+f.whole_part        <span class="comment">-- 2 (INTEGER_64)</span>
+f.fractional_part   <span class="comment">-- 3/4 (SIMPLE_FRACTION)</span></code></pre>
+
+            <h3>Proper vs Improper</h3>
+<pre><code><span class="keyword">create</span> f.make (3, 4)   <span class="comment">-- Proper: numerator < denominator</span>
+f.is_proper   <span class="comment">-- True</span>
+f.is_improper <span class="comment">-- False</span>
+
+<span class="keyword">create</span> f.make (5, 4)   <span class="comment">-- Improper: numerator >= denominator</span>
+f.is_proper   <span class="comment">-- False</span>
+f.is_improper <span class="comment">-- True</span></code></pre>
+        </section>
+
+        <section id="output">
+            <h2>Output Formatting</h2>
+
+            <h3>Basic Output</h3>
+<pre><code><span class="keyword">create</span> f.make (3, 4)
+f.out              <span class="comment">-- "3/4"</span>
+f.to_string        <span class="comment">-- "3/4"</span>
+
+<span class="keyword">create</span> f.make (5, 1)
+f.out              <span class="comment">-- "5" (integers shown without denominator)</span></code></pre>
+
+            <h3>Mixed Number Output</h3>
+<pre><code><span class="keyword">create</span> f.make (11, 4)
+f.to_mixed_string  <span class="comment">-- "2 3/4"</span>
+
+<span class="keyword">create</span> f.make (3, 4)
+f.to_mixed_string  <span class="comment">-- "3/4" (proper fractions unchanged)</span></code></pre>
+
+            <h3>Decimal Output</h3>
+<pre><code><span class="keyword">create</span> f.make (3, 4)
+f.to_decimal_string (2)  <span class="comment">-- "0.75"</span>
+f.to_decimal_string (4)  <span class="comment">-- "0.7500"</span></code></pre>
+
+            <h3>Numeric Conversion</h3>
+<pre><code>f.to_double     <span class="comment">-- Convert to DOUBLE (may lose precision)</span>
+f.to_integer    <span class="comment">-- Convert to INTEGER_64 (truncates)</span></code></pre>
+        </section>
+
+        <section id="factory-helpers">
+            <h2>Factory Helpers</h2>
+            <p>Common fractions available as factory methods:</p>
+
+<pre><code><span class="comment">-- Unit fractions</span>
+f.half      <span class="comment">-- 1/2</span>
+f.third     <span class="comment">-- 1/3</span>
+f.quarter   <span class="comment">-- 1/4</span>
+f.zero      <span class="comment">-- 0</span>
+f.one       <span class="comment">-- 1</span>
+
+<span class="comment">-- Multiples of common denominators</span>
+f.halves (3)      <span class="comment">-- 3/2</span>
+f.thirds (2)      <span class="comment">-- 2/3</span>
+f.quarters (3)    <span class="comment">-- 3/4</span>
+f.eighths (5)     <span class="comment">-- 5/8</span>
+f.sixteenths (7)  <span class="comment">-- 7/16</span></code></pre>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices</h2>
+
+            <h3>1. Use Fractions for Exact Math</h3>
+            <p>When exactness matters, use fractions:</p>
+<pre><code><span class="comment">-- GOOD: Exact</span>
+<span class="keyword">create</span> third.make (1, 3)
+total := third + third + third  <span class="comment">-- Exactly 1</span>
+
+<span class="comment">-- AVOID: Approximate</span>
+total := 1.0/3.0 + 1.0/3.0 + 1.0/3.0  <span class="comment">-- Maybe 0.9999...</span></code></pre>
+
+            <h3>2. Convert to Decimal at Display Time</h3>
+<pre><code><span class="comment">-- Do calculations in fractions</span>
+result := (a + b) * c / d
+
+<span class="comment">-- Convert only when displaying</span>
+print (result.to_decimal_string (2))</code></pre>
+
+            <h3>3. Use Mixed Numbers for User Display</h3>
+<pre><code><span class="comment">-- Internal: improper fraction</span>
+<span class="keyword">create</span> f.make (11, 4)
+
+<span class="comment">-- Display: mixed number</span>
+print (f.to_mixed_string)  <span class="comment">-- "2 3/4"</span></code></pre>
+
+            <h3>4. Handle Edge Cases</h3>
+<pre><code><span class="comment">-- Check before division</span>
+<span class="keyword">if</span> <span class="keyword">not</span> divisor.is_zero <span class="keyword">then</span>
+    result := amount / divisor
+<span class="keyword">end</span>
+
+<span class="comment">-- Check before reciprocal</span>
+<span class="keyword">if</span> <span class="keyword">not</span> f.is_zero <span class="keyword">then</span>
+    r := f.reciprocal
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="next-steps">
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="api-reference.html">API Reference</a> - Complete feature documentation</li>
+                <li><a href="cookbook.html">Cookbook</a> - Real-world examples</li>
+                <li><a href="architecture.html">Architecture</a> - Internal design</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="https://github.com/simple-eiffel">simple_*</a> ecosystem.</p>
+        <p>&copy; 2025 Larry Rix. MIT License.</p>
+    </footer>
+</body>
+</html>

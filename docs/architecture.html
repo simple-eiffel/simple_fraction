@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - simple_fraction</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_fraction</h1>
+        <p class="tagline">Architecture &amp; Design</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="architecture.html" class="active">Architecture</a></li>
+            <li><a href="cookbook.html">Cookbook</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_fraction">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="philosophy">
+            <h2>Design Philosophy</h2>
+            <p>
+                simple_fraction follows the <strong>simple_* library philosophy</strong>: provide
+                a clean, focused API for a single purpose. Unlike simple_decimal (which wraps Gobo's
+                MA_DECIMAL), simple_fraction is a pure Eiffel implementation with no external dependencies.
+            </p>
+
+            <div class="highlight-box">
+                <h3>Core Principles</h3>
+                <ul>
+                    <li><strong>Exactness</strong> - No approximation; 1/3 is exactly 1/3</li>
+                    <li><strong>Auto-reduction</strong> - Fractions always in lowest terms</li>
+                    <li><strong>Immutability</strong> - All operations return new values</li>
+                    <li><strong>Safety</strong> - Design by Contract throughout</li>
+                    <li><strong>No dependencies</strong> - Pure Eiffel, just needs base library</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="representation">
+            <h2>Internal Representation</h2>
+
+            <h3>Data Structure</h3>
+<pre><code><span class="keyword">class</span>
+    <span class="type">SIMPLE_FRACTION</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Access</span>
+
+    numerator: <span class="type">INTEGER_64</span>
+        <span class="comment">-- The numerator (top number), may be negative</span>
+
+    denominator: <span class="type">INTEGER_64</span>
+        <span class="comment">-- The denominator (bottom number), always positive</span>
+
+<span class="keyword">invariant</span>
+    denominator_positive: denominator > 0
+    reduced_form: is_reduced
+<span class="keyword">end</span></code></pre>
+
+            <h3>Why INTEGER_64?</h3>
+            <p>
+                INTEGER_64 provides a range of roughly ±9.2 quintillion, which handles most
+                practical calculations. For numerator/denominator pairs:
+            </p>
+            <ul>
+                <li>Can represent fractions with large numerators and denominators</li>
+                <li>Avoids overflow for most arithmetic operations</li>
+                <li>Simple, efficient integer math (no BigInteger needed)</li>
+            </ul>
+
+            <h3>Normalization Rules</h3>
+            <ol>
+                <li><strong>Denominator always positive</strong> - Sign stored in numerator only</li>
+                <li><strong>Always reduced</strong> - GCD of numerator and denominator is 1</li>
+                <li><strong>Zero normalized</strong> - 0/n always becomes 0/1</li>
+            </ol>
+
+<pre><code><span class="comment">-- Examples of normalization:</span>
+make (2, 4)     <span class="comment">-- Stored as 1/2 (reduced by GCD 2)</span>
+make (-3, 4)    <span class="comment">-- Stored as -3/4 (sign in numerator)</span>
+make (3, -4)    <span class="comment">-- Stored as -3/4 (sign moved to numerator)</span>
+make (-3, -4)   <span class="comment">-- Stored as 3/4 (negatives cancel)</span>
+make (0, 5)     <span class="comment">-- Stored as 0/1 (zero normalized)</span></code></pre>
+        </section>
+
+        <section id="gcd">
+            <h2>GCD Algorithm</h2>
+            <p>
+                Fraction reduction uses the <strong>Euclidean algorithm</strong> for finding
+                the Greatest Common Divisor:
+            </p>
+
+<pre><code>gcd (a, b: <span class="type">INTEGER_64</span>): <span class="type">INTEGER_64</span>
+        <span class="comment">-- Greatest common divisor using Euclidean algorithm</span>
+    <span class="keyword">require</span>
+        a_non_negative: a >= 0
+        b_non_negative: b >= 0
+    <span class="keyword">local</span>
+        l_a, l_b, l_temp: <span class="type">INTEGER_64</span>
+    <span class="keyword">do</span>
+        l_a := a
+        l_b := b
+        <span class="keyword">from</span>
+        <span class="keyword">until</span>
+            l_b = 0
+        <span class="keyword">loop</span>
+            l_temp := l_b
+            l_b := l_a \\ l_b
+            l_a := l_temp
+        <span class="keyword">end</span>
+        Result := l_a
+        <span class="keyword">if</span> Result = 0 <span class="keyword">then</span>
+            Result := 1
+        <span class="keyword">end</span>
+    <span class="keyword">ensure</span>
+        result_positive: Result > 0
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Algorithm Trace</h3>
+            <p>Example: gcd(48, 18)</p>
+            <ol>
+                <li>48 mod 18 = 12, so now find gcd(18, 12)</li>
+                <li>18 mod 12 = 6, so now find gcd(12, 6)</li>
+                <li>12 mod 6 = 0, so GCD is 6</li>
+            </ol>
+            <p>Therefore 48/18 reduces to 8/3 (divided by GCD 6).</p>
+        </section>
+
+        <section id="arithmetic">
+            <h2>Arithmetic Implementation</h2>
+
+            <h3>Addition and Subtraction</h3>
+<pre><code><span class="comment">-- a/b + c/d = (a*d + c*b) / (b*d)</span>
+add <span class="keyword">alias</span> <span class="string">"+"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">local</span>
+        l_num: <span class="type">INTEGER_64</span>
+    <span class="keyword">do</span>
+        l_num := numerator * other.denominator + other.numerator * denominator
+        <span class="keyword">create</span> Result.make (l_num, denominator * other.denominator)
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Multiplication</h3>
+<pre><code><span class="comment">-- a/b * c/d = (a*c) / (b*d)</span>
+multiply <span class="keyword">alias</span> <span class="string">"*"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">do</span>
+        <span class="keyword">create</span> Result.make (numerator * other.numerator, denominator * other.denominator)
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Division</h3>
+<pre><code><span class="comment">-- a/b / c/d = a/b * d/c = (a*d) / (b*c)</span>
+divide <span class="keyword">alias</span> <span class="string">"/"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">require</span>
+        other_not_zero: <span class="keyword">not</span> other.is_zero
+    <span class="keyword">do</span>
+        <span class="keyword">create</span> Result.make (numerator * other.denominator, denominator * other.numerator)
+    <span class="keyword">end</span></code></pre>
+
+            <p>
+                Note: The <code>make</code> constructor automatically reduces, so results
+                are always in lowest terms.
+            </p>
+        </section>
+
+        <section id="comparison">
+            <h2>Comparison Implementation</h2>
+
+            <p>Comparison uses cross-multiplication to avoid division:</p>
+
+<pre><code><span class="comment">-- a/b < c/d iff a*d < c*b (when denominators positive)</span>
+is_less <span class="keyword">alias</span> <span class="string">"<"</span> (other: <span class="keyword">like</span> Current): <span class="type">BOOLEAN</span>
+    <span class="keyword">do</span>
+        Result := numerator * other.denominator < other.numerator * denominator
+    <span class="keyword">end</span></code></pre>
+
+            <p>
+                Since denominators are always positive (invariant), this comparison is safe
+                and doesn't require sign adjustment.
+            </p>
+        </section>
+
+        <section id="mixed-numbers">
+            <h2>Mixed Number Handling</h2>
+
+            <p>Mixed numbers are converted to improper fractions on creation:</p>
+
+<pre><code>make_mixed (a_whole, a_numerator, a_denominator: <span class="type">INTEGER_64</span>)
+        <span class="comment">-- Create from mixed number: whole + numerator/denominator</span>
+    <span class="keyword">local</span>
+        l_num: <span class="type">INTEGER_64</span>
+    <span class="keyword">do</span>
+        <span class="keyword">if</span> a_whole >= 0 <span class="keyword">then</span>
+            l_num := a_whole * a_denominator + a_numerator
+        <span class="keyword">else</span>
+            l_num := a_whole * a_denominator - a_numerator
+        <span class="keyword">end</span>
+        set_and_reduce (l_num, a_denominator)
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Converting Back to Mixed</h3>
+<pre><code>to_mixed_string: <span class="type">STRING</span>
+        <span class="comment">-- Format as "whole num/den" or "num/den"</span>
+    <span class="keyword">local</span>
+        l_whole, l_frac_num: <span class="type">INTEGER_64</span>
+    <span class="keyword">do</span>
+        <span class="keyword">if</span> is_proper <span class="keyword">or</span> is_zero <span class="keyword">or</span> is_integer <span class="keyword">then</span>
+            Result := out
+        <span class="keyword">else</span>
+            l_whole := whole_part                    <span class="comment">-- 11/4 -> 2</span>
+            l_frac_num := (numerator - l_whole * denominator).abs  <span class="comment">-- -> 3</span>
+            Result := l_whole.out + <span class="string">" "</span> + l_frac_num.out + <span class="string">"/"</span> + denominator.out
+        <span class="keyword">end</span>
+    <span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="string-parsing">
+            <h2>String Parsing</h2>
+
+            <p>The parser handles multiple formats:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Format</th>
+                        <th>Example</th>
+                        <th>Detection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Simple fraction</td>
+                        <td>"3/4"</td>
+                        <td>Contains '/' but no space</td>
+                    </tr>
+                    <tr>
+                        <td>Mixed number</td>
+                        <td>"2 3/4"</td>
+                        <td>Contains both ' ' and '/'</td>
+                    </tr>
+                    <tr>
+                        <td>Decimal</td>
+                        <td>"0.5"</td>
+                        <td>Contains '.'</td>
+                    </tr>
+                    <tr>
+                        <td>Integer</td>
+                        <td>"5"</td>
+                        <td>None of the above</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Decimal Conversion</h3>
+            <p>Decimals become fractions with power-of-10 denominators, then reduce:</p>
+<pre><code><span class="comment">-- "0.5" -> 5/10 -> 1/2</span>
+<span class="comment">-- "0.25" -> 25/100 -> 1/4</span>
+<span class="comment">-- "0.125" -> 125/1000 -> 1/8</span></code></pre>
+        </section>
+
+        <section id="immutability">
+            <h2>Immutability Pattern</h2>
+
+            <p>All arithmetic operations return <strong>new</strong> SIMPLE_FRACTION objects:</p>
+
+            <h3>Benefits</h3>
+            <ul>
+                <li><strong>Thread Safety</strong> - No shared mutable state</li>
+                <li><strong>Predictability</strong> - Values never change unexpectedly</li>
+                <li><strong>Debugging</strong> - Original values preserved</li>
+                <li><strong>Chaining</strong> - Natural composition of operations</li>
+            </ul>
+
+<pre><code><span class="comment">-- Each operation creates new value</span>
+a := a + b    <span class="comment">-- 'a' now references new sum</span>
+
+<span class="comment">-- Chaining is natural</span>
+result := (a + b) * c / d</code></pre>
+        </section>
+
+        <section id="contracts">
+            <h2>Design by Contract</h2>
+
+            <h3>Class Invariants</h3>
+<pre><code><span class="keyword">invariant</span>
+    denominator_positive: denominator > 0
+    reduced_form: is_reduced</code></pre>
+
+            <h3>Key Preconditions</h3>
+<pre><code><span class="comment">-- Division requires non-zero divisor</span>
+divide <span class="keyword">alias</span> <span class="string">"/"</span> (other: <span class="keyword">like</span> Current): <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">require</span>
+        other_not_zero: <span class="keyword">not</span> other.is_zero
+
+<span class="comment">-- Reciprocal requires non-zero</span>
+reciprocal: <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">require</span>
+        not_zero: <span class="keyword">not</span> is_zero
+
+<span class="comment">-- Creation requires valid denominator</span>
+make (a_numerator, a_denominator: <span class="type">INTEGER_64</span>)
+    <span class="keyword">require</span>
+        denominator_not_zero: a_denominator /= 0</code></pre>
+
+            <h3>Key Postconditions</h3>
+<pre><code><span class="comment">-- Reduction always happens</span>
+make (a_numerator, a_denominator: <span class="type">INTEGER_64</span>)
+    <span class="keyword">ensure</span>
+        is_reduced: is_reduced
+        denominator_positive: denominator > 0
+
+<span class="comment">-- Absolute value is non-negative</span>
+absolute: <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">ensure</span>
+        result_non_negative: <span class="keyword">not</span> Result.is_negative
+
+<span class="comment">-- Reciprocal property</span>
+reciprocal: <span class="type">SIMPLE_FRACTION</span>
+    <span class="keyword">ensure</span>
+        reciprocal_property: (Current * Result).is_equal (one)</code></pre>
+        </section>
+
+        <section id="scoop">
+            <h2>SCOOP Compatibility</h2>
+
+            <p>simple_fraction is designed for SCOOP:</p>
+            <ul>
+                <li><strong>Immutable operations</strong> - No shared mutable state</li>
+                <li><strong>Void safety</strong> - All attributes are attached</li>
+                <li><strong>No global state</strong> - Each instance self-contained</li>
+            </ul>
+
+<pre><code>&lt;capability&gt;
+    &lt;concurrency support="scoop" use="scoop"/&gt;
+    &lt;void_safety support="all" use="all"/&gt;
+&lt;/capability&gt;</code></pre>
+        </section>
+
+        <section id="dependencies">
+            <h2>Dependencies</h2>
+
+            <h3>Minimal</h3>
+            <ul>
+                <li><strong>base</strong> - EiffelStudio standard library (only dependency)</li>
+            </ul>
+
+            <p>Unlike simple_decimal (which wraps Gobo MA_DECIMAL), simple_fraction is a pure
+            Eiffel implementation with no external dependencies.</p>
+        </section>
+
+        <section id="file-structure">
+            <h2>File Structure</h2>
+<pre><code>simple_fraction/
+├── simple_fraction.ecf       <span class="comment">-- Project configuration</span>
+├── src/
+│   └── simple_fraction.e     <span class="comment">-- Main class (~500 lines)</span>
+├── tests/
+│   └── simple_fraction_tests.e <span class="comment">-- Test suite (66 tests)</span>
+├── docs/
+│   ├── index.html
+│   ├── user-guide.html
+│   ├── api-reference.html
+│   ├── architecture.html
+│   ├── cookbook.html
+│   ├── css/style.css
+│   └── images/logo.png
+├── README.md
+└── LICENSE</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="https://github.com/simple-eiffel">simple_*</a> ecosystem.</p>
+        <p>&copy; 2025 Larry Rix. MIT License.</p>
+    </footer>
+</body>
+</html>

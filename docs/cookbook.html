@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookbook - simple_fraction</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_fraction</h1>
+        <p class="tagline">Cookbook - Real-World Recipes</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+            <li><a href="cookbook.html" class="active">Cookbook</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_fraction">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="intro">
+            <h2>Recipe Collection</h2>
+            <p>
+                Ready-to-use code patterns for common fraction scenarios. Each recipe
+                is complete and can be adapted to your needs.
+            </p>
+        </section>
+
+        <section id="recipe-scaler">
+            <h2>Recipe: Recipe Scaler</h2>
+            <p>Scale recipe ingredients up or down while keeping exact fractional amounts.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">RECIPE_SCALER</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Access</span>
+
+    ingredients: <span class="type">ARRAYED_LIST</span> [<span class="type">TUPLE</span> [name: <span class="type">STRING</span>; amount: <span class="type">SIMPLE_FRACTION</span>; unit: <span class="type">STRING</span>]]
+        <span class="keyword">attribute</span>
+            <span class="keyword">create</span> Result.make (10)
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Setup</span>
+
+    add_ingredient (name, amount_str, unit: <span class="type">STRING</span>)
+            <span class="comment">-- Add ingredient with fractional amount</span>
+        <span class="keyword">local</span>
+            amount: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> amount.make_from_string (amount_str)
+            ingredients.extend ([name, amount, unit])
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Scaling</span>
+
+    scale (factor: <span class="type">INTEGER</span>): <span class="type">ARRAYED_LIST</span> [<span class="type">STRING</span>]
+            <span class="comment">-- Return scaled ingredient list</span>
+        <span class="keyword">local</span>
+            scaled: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (ingredients.count)
+            <span class="keyword">across</span> ingredients <span class="keyword">as</span> ing <span class="keyword">loop</span>
+                scaled := ing.amount.scale (factor)
+                Result.extend (scaled.to_mixed_string + <span class="string">" "</span> + ing.unit + <span class="string">" "</span> + ing.name)
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+    scale_fraction (num, den: <span class="type">INTEGER</span>): <span class="type">ARRAYED_LIST</span> [<span class="type">STRING</span>]
+            <span class="comment">-- Scale by fraction (e.g., 1/2 for half recipe)</span>
+        <span class="keyword">local</span>
+            factor, scaled: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> factor.make (num, den)
+            <span class="keyword">create</span> Result.make (ingredients.count)
+            <span class="keyword">across</span> ingredients <span class="keyword">as</span> ing <span class="keyword">loop</span>
+                scaled := ing.amount * factor
+                Result.extend (scaled.to_mixed_string + <span class="string">" "</span> + ing.unit + <span class="string">" "</span> + ing.name)
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    recipe: <span class="type">RECIPE_SCALER</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> recipe
+    recipe.add_ingredient (<span class="string">"flour"</span>, <span class="string">"2 1/2"</span>, <span class="string">"cups"</span>)
+    recipe.add_ingredient (<span class="string">"sugar"</span>, <span class="string">"3/4"</span>, <span class="string">"cup"</span>)
+    recipe.add_ingredient (<span class="string">"butter"</span>, <span class="string">"1/3"</span>, <span class="string">"cup"</span>)
+
+    <span class="comment">-- Triple the recipe</span>
+    <span class="keyword">across</span> recipe.scale (3) <span class="keyword">as</span> line <span class="keyword">loop</span>
+        print (line + <span class="string">"%N"</span>)
+    <span class="keyword">end</span>
+    <span class="comment">-- Output:</span>
+    <span class="comment">-- 7 1/2 cups flour</span>
+    <span class="comment">-- 2 1/4 cup sugar</span>
+    <span class="comment">-- 1 cup butter</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="probability">
+            <h2>Recipe: Probability Calculator</h2>
+            <p>Calculate probabilities with exact fractions - no floating-point approximation.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">PROBABILITY_CALCULATOR</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Basic probabilities</span>
+
+    dice_roll (target: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of rolling target on a 6-sided die</span>
+        <span class="keyword">require</span>
+            valid_target: target >= 1 <span class="keyword">and</span> target <= 6
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (1, 6)
+        <span class="keyword">end</span>
+
+    coin_flip (heads: <span class="type">BOOLEAN</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of heads or tails</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (1, 2)
+        <span class="keyword">end</span>
+
+    card_draw (favorable, total: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of drawing favorable card from deck</span>
+        <span class="keyword">require</span>
+            valid: favorable >= 0 <span class="keyword">and</span> favorable <= total <span class="keyword">and</span> total > 0
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (favorable, total)
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Combined probabilities</span>
+
+    both (p1, p2: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of both independent events</span>
+        <span class="keyword">do</span>
+            Result := p1 * p2
+        <span class="keyword">end</span>
+
+    either (p1, p2: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of either event (mutually exclusive)</span>
+        <span class="keyword">do</span>
+            Result := p1 + p2
+        <span class="keyword">end</span>
+
+    not_event (p: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of event NOT happening</span>
+        <span class="keyword">local</span>
+            one: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> one.make_one
+            Result := one - p
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Display</span>
+
+    as_percentage (p: <span class="type">SIMPLE_FRACTION</span>): <span class="type">STRING</span>
+            <span class="comment">-- Display probability as percentage</span>
+        <span class="keyword">do</span>
+            Result := (p.to_double * 100).truncated_to_integer.out + <span class="string">"%%"</span>
+        <span class="keyword">end</span>
+
+    as_odds (p: <span class="type">SIMPLE_FRACTION</span>): <span class="type">STRING</span>
+            <span class="comment">-- Display as "X in Y"</span>
+        <span class="keyword">do</span>
+            Result := p.numerator.out + <span class="string">" in "</span> + p.denominator.out
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    prob: <span class="type">PROBABILITY_CALCULATOR</span>
+    p_six, p_ace, p_both: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> prob
+
+    <span class="comment">-- Probability of rolling a 6</span>
+    p_six := prob.dice_roll (6)
+    print (<span class="string">"Roll 6: "</span> + p_six.out + <span class="string">" = "</span> + prob.as_odds (p_six))
+    <span class="comment">-- Roll 6: 1/6 = 1 in 6</span>
+
+    <span class="comment">-- Probability of drawing an Ace from 52 cards</span>
+    p_ace := prob.card_draw (4, 52)
+    print (<span class="string">"Draw Ace: "</span> + p_ace.out)
+    <span class="comment">-- Draw Ace: 1/13 (automatically reduced from 4/52)</span>
+
+    <span class="comment">-- Probability of BOTH rolling 6 AND drawing Ace</span>
+    p_both := prob.both (p_six, p_ace)
+    print (<span class="string">"Both: "</span> + p_both.out)
+    <span class="comment">-- Both: 1/78</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="music">
+            <h2>Recipe: Music Note Duration Calculator</h2>
+            <p>Calculate musical note durations and time signatures using fractions.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">MUSIC_CALCULATOR</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Note durations (relative to whole note)</span>
+
+    whole_note: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span> <span class="keyword">create</span> Result.make_one <span class="keyword">end</span>
+
+    half_note: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span> <span class="keyword">create</span> Result.make (1, 2) <span class="keyword">end</span>
+
+    quarter_note: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span> <span class="keyword">create</span> Result.make (1, 4) <span class="keyword">end</span>
+
+    eighth_note: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span> <span class="keyword">create</span> Result.make (1, 8) <span class="keyword">end</span>
+
+    sixteenth_note: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span> <span class="keyword">create</span> Result.make (1, 16) <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Modifiers</span>
+
+    dotted (note: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Dotted note = 1.5x duration</span>
+        <span class="keyword">do</span>
+            Result := note + note.scale_down (2)
+        <span class="keyword">end</span>
+
+    triplet (note: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Triplet = 2/3 duration (3 in time of 2)</span>
+        <span class="keyword">local</span>
+            two_thirds: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> two_thirds.make (2, 3)
+            Result := note * two_thirds
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Measure calculation</span>
+
+    fits_in_measure (notes: <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]; time_sig_num, time_sig_den: <span class="type">INTEGER</span>): <span class="type">BOOLEAN</span>
+            <span class="comment">-- Do notes fit exactly in one measure?</span>
+        <span class="keyword">local</span>
+            total, measure: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> total.make_zero
+            <span class="keyword">across</span> notes <span class="keyword">as</span> n <span class="keyword">loop</span>
+                total := total + n
+            <span class="keyword">end</span>
+            <span class="keyword">create</span> measure.make (time_sig_num, time_sig_den)
+            Result := total.is_equal (measure)
+        <span class="keyword">end</span>
+
+    remaining_in_measure (notes: <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]; time_sig_num, time_sig_den: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- How much duration remaining in measure?</span>
+        <span class="keyword">local</span>
+            total, measure: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> total.make_zero
+            <span class="keyword">across</span> notes <span class="keyword">as</span> n <span class="keyword">loop</span>
+                total := total + n
+            <span class="keyword">end</span>
+            <span class="keyword">create</span> measure.make (time_sig_num, time_sig_den)
+            Result := measure - total
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    music: <span class="type">MUSIC_CALCULATOR</span>
+    notes: <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]
+<span class="keyword">do</span>
+    <span class="keyword">create</span> music
+
+    <span class="comment">-- Dotted quarter = 3/8</span>
+    print (music.dotted (music.quarter_note).out)  <span class="comment">-- "3/8"</span>
+
+    <span class="comment">-- Quarter triplet = 1/6</span>
+    print (music.triplet (music.quarter_note).out)  <span class="comment">-- "1/6"</span>
+
+    <span class="comment">-- Check if notes fill a 4/4 measure</span>
+    notes := &lt;&lt;music.quarter_note, music.quarter_note, music.half_note&gt;&gt;
+    print (music.fits_in_measure (notes, 4, 4).out)  <span class="comment">-- "True"</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="measurements">
+            <h2>Recipe: Imperial Measurements Converter</h2>
+            <p>Convert between imperial measurement fractions.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">IMPERIAL_CONVERTER</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Length conversions</span>
+
+    inches_to_feet (inches: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Convert inches to feet</span>
+        <span class="keyword">do</span>
+            Result := inches.scale_down (12)
+        <span class="keyword">end</span>
+
+    feet_to_inches (feet: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Convert feet to inches</span>
+        <span class="keyword">do</span>
+            Result := feet.scale (12)
+        <span class="keyword">end</span>
+
+    yards_to_feet (yards: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            Result := yards.scale (3)
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Volume conversions</span>
+
+    cups_to_tablespoons (cups: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- 1 cup = 16 tablespoons</span>
+        <span class="keyword">do</span>
+            Result := cups.scale (16)
+        <span class="keyword">end</span>
+
+    tablespoons_to_teaspoons (tbsp: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- 1 tablespoon = 3 teaspoons</span>
+        <span class="keyword">do</span>
+            Result := tbsp.scale (3)
+        <span class="keyword">end</span>
+
+    cups_to_quarts (cups: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- 4 cups = 1 quart</span>
+        <span class="keyword">do</span>
+            Result := cups.scale_down (4)
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Formatting</span>
+
+    format_feet_inches (total_inches: <span class="type">SIMPLE_FRACTION</span>): <span class="type">STRING</span>
+            <span class="comment">-- Format as "X ft Y in"</span>
+        <span class="keyword">local</span>
+            feet_part: <span class="type">INTEGER_64</span>
+            inches_part: <span class="type">SIMPLE_FRACTION</span>
+            twelve: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> twelve.make_integer (12)
+            feet_part := (total_inches / twelve).to_integer
+            <span class="keyword">create</span> inches_part.make (total_inches.numerator - feet_part * 12 * total_inches.denominator, total_inches.denominator)
+
+            <span class="keyword">if</span> feet_part = 0 <span class="keyword">then</span>
+                Result := inches_part.to_mixed_string + <span class="string">" in"</span>
+            <span class="keyword">elseif</span> inches_part.is_zero <span class="keyword">then</span>
+                Result := feet_part.out + <span class="string">" ft"</span>
+            <span class="keyword">else</span>
+                Result := feet_part.out + <span class="string">" ft "</span> + inches_part.to_mixed_string + <span class="string">" in"</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    conv: <span class="type">IMPERIAL_CONVERTER</span>
+    half_cup, quarter_inch: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> conv
+
+    <span class="comment">-- 1/2 cup to tablespoons</span>
+    <span class="keyword">create</span> half_cup.make (1, 2)
+    print (conv.cups_to_tablespoons (half_cup).out + <span class="string">" tbsp"</span>)
+    <span class="comment">-- "8 tbsp"</span>
+
+    <span class="comment">-- 3/4 cup to teaspoons</span>
+    <span class="keyword">create</span> half_cup.make (3, 4)
+    print (conv.tablespoons_to_teaspoons (conv.cups_to_tablespoons (half_cup)).out + <span class="string">" tsp"</span>)
+    <span class="comment">-- "36 tsp"</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="ratio">
+            <h2>Recipe: Ratio and Proportion Calculator</h2>
+            <p>Solve ratio and proportion problems.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">RATIO_CALCULATOR</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Ratios</span>
+
+    simplify_ratio (a, b: <span class="type">INTEGER</span>): <span class="type">TUPLE</span> [first, second: <span class="type">INTEGER_64</span>]
+            <span class="comment">-- Simplify ratio a:b to lowest terms</span>
+        <span class="keyword">local</span>
+            f: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> f.make (a, b)
+            Result := [f.numerator, f.denominator]
+        <span class="keyword">end</span>
+
+    ratio_to_fraction (a, b: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Convert ratio a:b to fraction a/b</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (a, b)
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Proportions</span>
+
+    solve_proportion (a, b, c: <span class="type">SIMPLE_FRACTION</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Solve a/b = c/x for x</span>
+            <span class="comment">-- x = b*c/a</span>
+        <span class="keyword">require</span>
+            a_not_zero: <span class="keyword">not</span> a.is_zero
+        <span class="keyword">do</span>
+            Result := (b * c) / a
+        <span class="keyword">end</span>
+
+    scale_to_total (parts: <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]; total: <span class="type">SIMPLE_FRACTION</span>): <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]
+            <span class="comment">-- Scale parts proportionally to sum to total</span>
+        <span class="keyword">local</span>
+            sum, factor: <span class="type">SIMPLE_FRACTION</span>
+            i: <span class="type">INTEGER</span>
+        <span class="keyword">do</span>
+            <span class="comment">-- Calculate current sum</span>
+            <span class="keyword">create</span> sum.make_zero
+            <span class="keyword">across</span> parts <span class="keyword">as</span> p <span class="keyword">loop</span>
+                sum := sum + p
+            <span class="keyword">end</span>
+
+            <span class="comment">-- Calculate scaling factor</span>
+            factor := total / sum
+
+            <span class="comment">-- Scale each part</span>
+            <span class="keyword">create</span> Result.make_filled (<span class="keyword">create</span> {<span class="type">SIMPLE_FRACTION</span>}.make_zero, 1, parts.count)
+            <span class="keyword">from</span> i := 1 <span class="keyword">until</span> i > parts.count <span class="keyword">loop</span>
+                Result[i] := parts[i] * factor
+                i := i + 1
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Golden ratio</span>
+
+    golden_ratio_approximate: <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Fibonacci approximation of golden ratio: 21/13 ~ 1.618</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (21, 13)
+        <span class="keyword">end</span>
+
+    golden_section (total: <span class="type">SIMPLE_FRACTION</span>): <span class="type">TUPLE</span> [larger, smaller: <span class="type">SIMPLE_FRACTION</span>]
+            <span class="comment">-- Divide total by golden ratio</span>
+        <span class="keyword">local</span>
+            phi, larger: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            phi := golden_ratio_approximate
+            larger := total / phi
+            Result := [larger, total - larger]
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    ratio: <span class="type">RATIO_CALCULATOR</span>
+    parts: <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]
+    scaled: <span class="type">ARRAY</span> [<span class="type">SIMPLE_FRACTION</span>]
+    total: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> ratio
+
+    <span class="comment">-- Simplify 12:8 to 3:2</span>
+    print (ratio.simplify_ratio (12, 8))  <span class="comment">-- [3, 2]</span>
+
+    <span class="comment">-- Divide 100 in ratio 2:3:5</span>
+    parts := &lt;&lt;<span class="keyword">create</span> {<span class="type">SIMPLE_FRACTION</span>}.make (2, 1),
+               <span class="keyword">create</span> {<span class="type">SIMPLE_FRACTION</span>}.make (3, 1),
+               <span class="keyword">create</span> {<span class="type">SIMPLE_FRACTION</span>}.make (5, 1)&gt;&gt;
+    <span class="keyword">create</span> total.make_integer (100)
+    scaled := ratio.scale_to_total (parts, total)
+    <span class="comment">-- [20, 30, 50]</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="dice">
+            <h2>Recipe: Dice Probability Calculator</h2>
+            <p>Calculate exact dice probabilities for games.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">DICE_CALCULATOR</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Single die</span>
+
+    probability_single (target, die_sides: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of rolling exactly target</span>
+        <span class="keyword">require</span>
+            valid: target >= 1 <span class="keyword">and</span> target <= die_sides
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (1, die_sides)
+        <span class="keyword">end</span>
+
+    probability_at_least (minimum, die_sides: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of rolling minimum or higher</span>
+        <span class="keyword">require</span>
+            valid: minimum >= 1 <span class="keyword">and</span> minimum <= die_sides
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> Result.make (die_sides - minimum + 1, die_sides)
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Multiple dice</span>
+
+    probability_all_same (dice_count, die_sides: <span class="type">INTEGER</span>): <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability all dice show same value</span>
+        <span class="keyword">local</span>
+            single: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="comment">-- First die can be anything, rest must match</span>
+            <span class="comment">-- = 1 * (1/sides)^(n-1) * sides = (1/sides)^(n-1)</span>
+            <span class="keyword">create</span> single.make (1, die_sides)
+            Result := single.power (dice_count - 1)
+        <span class="keyword">end</span>
+
+    probability_sum_7_two_d6: <span class="type">SIMPLE_FRACTION</span>
+            <span class="comment">-- Probability of rolling 7 on 2d6 (most common roll)</span>
+        <span class="keyword">do</span>
+            <span class="comment">-- 6 ways to make 7: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1)</span>
+            <span class="comment">-- out of 36 total combinations</span>
+            <span class="keyword">create</span> Result.make (6, 36)  <span class="comment">-- Reduces to 1/6</span>
+        <span class="keyword">end</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Display</span>
+
+    odds_format (prob: <span class="type">SIMPLE_FRACTION</span>): <span class="type">STRING</span>
+            <span class="comment">-- Format as "X to Y" odds against</span>
+        <span class="keyword">local</span>
+            against: <span class="type">SIMPLE_FRACTION</span>
+            one: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> one.make_one
+            against := one - prob
+            Result := against.numerator.out + <span class="string">" to "</span> + prob.numerator.out
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    dice: <span class="type">DICE_CALCULATOR</span>
+    p: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> dice
+
+    <span class="comment">-- Roll 4+ on d6</span>
+    p := dice.probability_at_least (4, 6)
+    print (p.out)  <span class="comment">-- "1/2"</span>
+
+    <span class="comment">-- Roll 7 on 2d6</span>
+    p := dice.probability_sum_7_two_d6
+    print (p.out)  <span class="comment">-- "1/6"</span>
+
+    <span class="comment">-- Yahtzee (all 5 dice same)</span>
+    p := dice.probability_all_same (5, 6)
+    print (p.out)  <span class="comment">-- "1/1296"</span>
+    print (dice.odds_format (p))  <span class="comment">-- "1295 to 1"</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="exactness-demo">
+            <h2>Recipe: Exactness Demonstration</h2>
+            <p>Demonstrate why fractions matter for exact arithmetic.</p>
+
+<pre><code><span class="keyword">class</span>
+    <span class="type">EXACTNESS_DEMO</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Demonstrations</span>
+
+    thirds_sum: <span class="type">STRING</span>
+            <span class="comment">-- Show that 1/3 + 1/3 + 1/3 = 1 exactly</span>
+        <span class="keyword">local</span>
+            third, sum: <span class="type">SIMPLE_FRACTION</span>
+            double_sum: <span class="type">DOUBLE</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> third.make (1, 3)
+            sum := third + third + third
+
+            double_sum := 1.0/3.0 + 1.0/3.0 + 1.0/3.0
+
+            Result := <span class="string">"Fraction: 1/3 + 1/3 + 1/3 = "</span> + sum.out + <span class="string">"%N"</span>
+            Result := Result + <span class="string">"Double:   1/3 + 1/3 + 1/3 = "</span> + double_sum.out
+        <span class="keyword">end</span>
+
+    sevenths_product: <span class="type">STRING</span>
+            <span class="comment">-- Show that 1/7 * 7 = 1 exactly</span>
+        <span class="keyword">local</span>
+            seventh, product: <span class="type">SIMPLE_FRACTION</span>
+            double_product: <span class="type">DOUBLE</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> seventh.make (1, 7)
+            product := seventh.scale (7)
+
+            double_product := (1.0/7.0) * 7.0
+
+            Result := <span class="string">"Fraction: 1/7 * 7 = "</span> + product.out + <span class="string">"%N"</span>
+            Result := Result + <span class="string">"Double:   1/7 * 7 = "</span> + double_product.out
+        <span class="keyword">end</span>
+
+    complex_calculation: <span class="type">STRING</span>
+            <span class="comment">-- Complex calculation remains exact</span>
+        <span class="keyword">local</span>
+            a, b, c, result: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="comment">-- Calculate: ((1/2 + 1/3) * 6 - 2) / 3</span>
+            <span class="keyword">create</span> a.make (1, 2)
+            <span class="keyword">create</span> b.make (1, 3)
+            <span class="keyword">create</span> c.make_integer (6)
+
+            result := a + b           <span class="comment">-- 5/6</span>
+            result := result * c      <span class="comment">-- 5</span>
+            result := result - <span class="keyword">create</span> {<span class="type">SIMPLE_FRACTION</span>}.make_integer (2)  <span class="comment">-- 3</span>
+            result := result / <span class="keyword">create</span> {<span class="type">SIMPLE_FRACTION</span>}.make_integer (3)  <span class="comment">-- 1</span>
+
+            Result := <span class="string">"((1/2 + 1/3) * 6 - 2) / 3 = "</span> + result.out + <span class="string">" (exactly 1)"</span>
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+<span class="keyword">local</span>
+    demo: <span class="type">EXACTNESS_DEMO</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> demo
+    print (demo.thirds_sum)
+    <span class="comment">-- Fraction: 1/3 + 1/3 + 1/3 = 1</span>
+    <span class="comment">-- Double:   1/3 + 1/3 + 1/3 = 1 (may vary)</span>
+
+    print (demo.complex_calculation)
+    <span class="comment">-- ((1/2 + 1/3) * 6 - 2) / 3 = 1 (exactly 1)</span>
+<span class="keyword">end</span></code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="https://github.com/simple-eiffel">simple_*</a> ecosystem.</p>
+        <p>&copy; 2025 Larry Rix. MIT License.</p>
+    </footer>
+</body>
+</html>

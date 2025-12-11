@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<system xmlns="http://www.eiffel.com/developers/xml/configuration-1-23-0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.eiffel.com/developers/xml/configuration-1-23-0 http://www.eiffel.com/developers/xml/configuration-1-23-0.xsd" name="simple_fraction" uuid="B2C3D4E5-F6A7-8901-BCDE-F23456789012" library_target="simple_fraction">
+	<description>simple_fraction - Exact rational arithmetic with fractions and mixed numbers</description>
+	<target name="simple_fraction">
+		<root all_classes="true"/>
+		<version major="1" minor="0" release="0" build="1" company="Simple Eiffel" product="simple_fraction" copyright="2024-2025 Larry Rix, MIT License"/>
+		<option warning="warning" manifest_array_type="mismatch_warning">
+			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
+		</option>
+		<setting name="console_application" value="true"/>
+		<setting name="dead_code_removal" value="feature"/>
+		<capability>
+			<concurrency support="scoop" use="scoop"/>
+			<void_safety support="all" use="all"/>
+		</capability>
+		<library name="base" location="$ISE_LIBRARY\library\base\base.ecf"/>
+		<cluster name="src" location=".\src\" recursive="true"/>
+	</target>
+	<target name="simple_fraction_tests" extends="simple_fraction">
+		<root class="SIMPLE_FRACTION_TESTS" feature="make"/>
+		<cluster name="tests" location=".\tests\" recursive="true"/>
+	</target>
+</system>

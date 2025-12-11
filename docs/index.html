@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simple_fraction - Exact Rational Arithmetic for Eiffel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_fraction</h1>
+        <p class="tagline">Exact Rational Arithmetic with Fractions and Mixed Numbers</p>
+        <div class="badges">
+            <span class="badge badge-version">v1.0.0</span>
+            <span class="badge badge-license">MIT</span>
+            <span class="badge badge-dbc">DbC Enforced</span>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="user-guide.html">User Guide</a></li>
+            <li><a href="api-reference.html">API Reference</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+            <li><a href="cookbook.html">Cookbook</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_fraction">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                <strong>simple_fraction</strong> provides exact rational arithmetic for Eiffel using
+                fractions (numerator/denominator). Perfect for <strong>recipes, measurements, probabilities</strong>,
+                and any calculation where precision matters.
+            </p>
+
+            <div class="highlight-box">
+                <h3>The Problem with Decimals</h3>
+                <p>Neither floating-point nor decimal can represent 1/3 exactly:</p>
+<pre><code><span class="comment">-- Every decimal representation of 1/3 is approximate</span>
+1.0 / 3.0  <span class="comment">-- 0.33333333... (truncated somewhere)</span></code></pre>
+                <p>This means 1/3 + 1/3 + 1/3 may not equal exactly 1!</p>
+            </div>
+
+            <div class="highlight-box success">
+                <h3>The Solution</h3>
+<pre><code><span class="keyword">local</span>
+    third, total: <span class="type">SIMPLE_FRACTION</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> third.make (1, 3)
+    total := third + third + third
+    print (total.out)  <span class="comment">-- "1" (exactly 3/3 = 1)</span>
+<span class="keyword">end</span></code></pre>
+            </div>
+        </section>
+
+        <section id="quick-start">
+            <h2>Quick Start</h2>
+
+            <h3>Installation</h3>
+            <ol>
+                <li>Set the environment variable:
+<pre><code>export SIMPLE_FRACTION=/path/to/simple_fraction</code></pre>
+                </li>
+                <li>Add to your ECF file:
+<pre><code>&lt;library name="simple_fraction" location="$SIMPLE_FRACTION/simple_fraction.ecf"/&gt;</code></pre>
+                </li>
+            </ol>
+
+            <h3>Basic Usage</h3>
+<pre><code><span class="keyword">class</span>
+    <span class="type">RECIPE_SCALER</span>
+
+<span class="keyword">feature</span> <span class="comment">-- Scaling</span>
+
+    triple_recipe (ingredient: <span class="type">STRING</span>): <span class="type">STRING</span>
+            <span class="comment">-- Triple a fractional ingredient amount</span>
+        <span class="keyword">local</span>
+            amount, tripled: <span class="type">SIMPLE_FRACTION</span>
+        <span class="keyword">do</span>
+            <span class="keyword">create</span> amount.make_from_string (ingredient)
+            tripled := amount.scale (3)
+            Result := tripled.to_mixed_string
+        <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">-- Usage:</span>
+scaler.triple_recipe (<span class="string">"2/3"</span>)   <span class="comment">-- Returns: "2"</span>
+scaler.triple_recipe (<span class="string">"1/4"</span>)   <span class="comment">-- Returns: "3/4"</span>
+scaler.triple_recipe (<span class="string">"1 1/2"</span>) <span class="comment">-- Returns: "4 1/2"</span></code></pre>
+        </section>
+
+        <section id="features">
+            <h2>Key Features</h2>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Exact Arithmetic</h3>
+                    <p>1/3 + 1/3 + 1/3 = 1 exactly. No rounding errors, no approximation.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Auto-Reduction</h3>
+                    <p>Fractions automatically reduce to lowest terms. 4/8 becomes 1/2.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Mixed Numbers</h3>
+                    <p>Full support for mixed numbers like 2 3/4. Create, display, extract parts.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Smart Parsing</h3>
+                    <p>Parse "3/4", "2 3/4", "0.5", or "5" - all work automatically.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Immutable Operations</h3>
+                    <p>All arithmetic returns new values. Thread-safe, predictable.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Design by Contract</h3>
+                    <p>Full preconditions, postconditions, and invariants throughout.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="vs-decimal">
+            <h2>simple_fraction vs simple_decimal</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>simple_fraction</th>
+                        <th>simple_decimal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Best for</td>
+                        <td>Ratios, recipes, probabilities</td>
+                        <td>Money, financial, prices</td>
+                    </tr>
+                    <tr>
+                        <td>1/3</td>
+                        <td>Exact</td>
+                        <td>Approximate</td>
+                    </tr>
+                    <tr>
+                        <td>0.1</td>
+                        <td>1/10 (exact)</td>
+                        <td>Exact</td>
+                    </tr>
+                    <tr>
+                        <td>Output</td>
+                        <td>"2 3/4"</td>
+                        <td>"$19.99"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="documentation">
+            <h2>Documentation</h2>
+            <ul class="doc-links">
+                <li><a href="user-guide.html"><strong>User Guide</strong></a> - Complete tutorial with examples</li>
+                <li><a href="api-reference.html"><strong>API Reference</strong></a> - Full feature documentation</li>
+                <li><a href="architecture.html"><strong>Architecture</strong></a> - Internal design and rationale</li>
+                <li><a href="cookbook.html"><strong>Cookbook</strong></a> - Real-world recipes and patterns</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="https://github.com/simple-eiffel">simple_*</a> ecosystem of focused, single-purpose Eiffel libraries.</p>
+        <p>&copy; 2025 Larry Rix. MIT License.</p>
+    </footer>
+</body>
+</html>

@@ -18,6 +18,6 @@
 	</target>
 	<target name="simple_fraction_tests" extends="simple_fraction">
 		<root class="SIMPLE_FRACTION_TESTS" feature="make"/>
-		<cluster name="tests" location=".\tests\" recursive="true"/>
+		<cluster name="test_classes" location=".\testing\" recursive="true"/>
 	</target>
 </system>

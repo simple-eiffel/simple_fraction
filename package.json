@@ -1,0 +1,9 @@
+{
+  "name": "simple_fraction",
+  "version": "0.1.0",
+  "description": "simple_fraction - Exact rational arithmetic with fractions and mixed numbers",
+  "author": "Larry Rix",
+  "license": "MIT",
+  "category": "utilities",
+  "keywords": ["fraction", "rational", "math"]
+}

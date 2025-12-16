@@ -189,10 +189,10 @@ f.to_decimal_string (2)  -- "0.75"
 
 ### Environment Setup
 
-Add to your environment:
+Set the ecosystem environment variable (one-time setup for all simple_* libraries):
 
 ```bash
-export SIMPLE_FRACTION=/path/to/simple_fraction
+export SIMPLE_EIFFEL=D:\prod
 ```
 
 ### ECF Configuration
@@ -200,7 +200,7 @@ export SIMPLE_FRACTION=/path/to/simple_fraction
 Add to your project's `.ecf` file:
 
 ```xml
-<library name="simple_fraction" location="$SIMPLE_FRACTION/simple_fraction.ecf"/>
+<library name="simple_fraction" location="$SIMPLE_EIFFEL/simple_fraction/simple_fraction.ecf"/>
 ```
 
 ### Dependencies

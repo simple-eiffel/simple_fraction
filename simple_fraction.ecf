@@ -17,7 +17,9 @@
 		<cluster name="src" location=".\src\" recursive="true"/>
 	</target>
 	<target name="simple_fraction_tests" extends="simple_fraction">
-		<root class="SIMPLE_FRACTION_TESTS" feature="make"/>
+		<root class="TEST_APP" feature="make"/>
+				<library name="testing" location="$ISE_LIBRARY\library	esting	esting.ecf"/>
+				<library name="simple_testing" location="$SIMPLE_EIFFEL\simple_testing\simple_testing.ecf"/>
 		<cluster name="test_classes" location=".\testing\" recursive="true"/>
 	</target>
 </system>

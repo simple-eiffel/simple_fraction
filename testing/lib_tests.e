@@ -21,8 +21,8 @@ feature -- Tests
 			assert_true ("default_create = 0/1", f.numerator = 0 and f.denominator = 1)
 
 			create f.make (3, 4)
-			assert_integers_equal ("make(3,4) numerator", 3, f.numerator)
-			assert_integers_equal ("make(3,4) denominator", 4, f.denominator)
+			assert_integers_equal ("make(3,4) numerator", 3, f.numerator.to_integer_32)
+			assert_integers_equal ("make(3,4) denominator", 4, f.denominator.to_integer_32)
 
 			create f.make_integer (5)
 			assert_true ("make_integer(5)", f.numerator = 5 and f.denominator = 1)
@@ -150,7 +150,7 @@ feature -- Tests
 			assert_strings_equal ("4/1 mixed string", "4", f.to_mixed_string)
 
 			create f.make (11, 4)
-			assert_integers_equal ("whole_part(11/4)", 2, f.whole_part)
+			assert_integers_equal ("whole_part(11/4)", 2, f.whole_part.to_integer_32)
 
 			create f.make (11, 4)
 			assert_true ("fractional_part(11/4) = 3/4",
@@ -202,7 +202,7 @@ feature -- Tests
 			assert_true ("1/4 to_double = 0.25", (d - 0.25).abs < 0.0001)
 
 			create f.make (7, 2)
-			assert_integers_equal ("7/2 to_integer", 3, f.to_integer)
+			assert_integers_equal ("7/2 to_integer", 3, f.to_integer.to_integer_32)
 
 			create f.make (3, 4)
 			assert_strings_equal ("3/4 out", "3/4", f.out)
@@ -218,7 +218,7 @@ feature -- Tests
 		do
 			create f.make (0, 5)
 			assert_true ("0/5 is_zero", f.is_zero)
-			assert_integers_equal ("0/5 = 0/1", 1, f.denominator)
+			assert_integers_equal ("0/5 = 0/1", 1, f.denominator.to_integer_32)
 
 			create f.make (3, 4)
 			assert_true ("3/4 is_proper", f.is_proper)
